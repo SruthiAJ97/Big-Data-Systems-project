@@ -92,20 +92,30 @@ public class InputReader extends AbstractBehavior<InputReader.Message> {
 		return this;
 	}
 
-	private Behavior<Message> handle(ReadBatchMessage message) throws IOException, CsvValidationException {
-		List<String[]> batch = new ArrayList<>(message.getBatchSize());
-		for (int i = 0; i < message.getBatchSize(); i++) {
-			String[] line = this.reader.readNext();
-			if (line == null)
-				break;
-			batch.add(line);
-		}
+    private Behavior<Message> handle(ReadBatchMessage message) throws IOException, CsvValidationException {
+        List<String[]> batch = new ArrayList<>(message.getBatchSize());
+        boolean eof = false;
 
-		message.getReplyTo().tell(new DependencyMiner.BatchMessage(this.id, batch));
-		return this;
-	}
+        for (int i = 0; i < message.getBatchSize(); i++) {
+            String[] line = this.reader.readNext();
 
-	private Behavior<Message> handle(PostStop signal) throws IOException {
+            if (line == null) {
+                eof = true;
+                break;
+            }
+            batch.add(line);
+        }
+        if (!batch.isEmpty()) {
+            message.getReplyTo().tell(new DependencyMiner.BatchMessage(this.id, batch));
+        }
+        if (eof) {
+            message.getReplyTo().tell(new DependencyMiner.EndOfFileMsg(this.id));
+        }
+
+        return this;
+    }
+
+    private Behavior<Message> handle(PostStop signal) throws IOException {
 		this.reader.close();
 		return this;
 	}
