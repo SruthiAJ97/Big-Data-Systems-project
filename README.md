@@ -1,4 +1,4 @@
-# Distributed Dependency Miner (Akka)
+# Big Data Systems Project (Akka)
 
 This project implements a distributed Inclusion Dependency (IND) discovery system using Akka Typed (Java). It processes large CSV datasets and identifies column relationships across files using a Master–Worker architecture.
 
